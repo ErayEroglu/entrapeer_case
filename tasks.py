@@ -3,18 +3,17 @@ import json
 from celery import Celery
 from celery.utils.log import get_task_logger
 
-app = Celery('CompanyAnalyzer', broker='pyamqp://guest@localhost//')
-app.conf.result_backend = 'rpc://'
+app = Celery('CompanyAnalyzer', broker='pyamqp://guest@localhost//', backend='redis://localhost')
 
 logger = get_task_logger(__name__)
 
-@app.task(name='requester.fetch_company_details_tester')
+@app.task(name='tasks.fetch_company_details_tester')
 def fetch_company_details_tester(company_id):
     print(company_id, "is being processed")	
     logger.info(f"{company_id} is being processed")
     return company_id
 
-@app.task(name='requester.fetch_company_details')
+@app.task(name='tasks.fetch_company_details')
 def fetch_company_details(company_id):
     headerDetailed = {
         'accept': '*/*',
@@ -33,10 +32,4 @@ def fetch_company_details(company_id):
     response = requests.post('https://ranking.glassdollar.com/graphql', headers=headerDetailed, json=json_data)
     return response.json()['data']['corporate']
 
-
-# # Printing or saving the formatted data
-# print(formatted_data)
-# # Optionally, you can save the data to a file
-# with open('company_details.json', 'w') as file:
-#     file.write(formatted_data)
 
