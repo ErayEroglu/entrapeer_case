@@ -29,8 +29,16 @@ def fetch_company_details(company_id):
         },
         'query': 'query ($id: String!) {\n  corporate(id: $id) {\n    id\n    name\n    description\n    logo_url\n    hq_city\n    hq_country\n    website_url\n    linkedin_url\n    twitter_url\n    startup_partners_count\n    startup_partners {\n      master_startup_id\n      company_name\n      logo_url: logo\n      city\n      website\n      country\n      theme_gd\n     }\n    startup_themes\n    }\n}\n',
     }
-    response = requests.post('https://ranking.glassdollar.com/graphql', headers=headerDetailed, json=json_data)
-    return response.json()['data']['corporate']
+
+    try:
+        # Your code to fetch company details
+        response = requests.post('https://ranking.glassdollar.com/graphql', headers=headerDetailed, json=json_data)
+        return response.json()['data']['corporate']
+    except Exception as exc:
+        raise "Excessive amount of requests to the server. Please try again later."
+        
+
+
 
 @app.task(name='tasks.fetch_all_companies')
 def fetch_all_companies(pageNo):

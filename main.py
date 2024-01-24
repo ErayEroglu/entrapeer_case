@@ -9,6 +9,7 @@ import json
 
 from tasks import fetch_company_details, fetch_all_companies
 from tasks import app as celery_app
+from closeness import grouper
 
 app = FastAPI()
 
@@ -58,13 +59,35 @@ async def scraper():
         details_result = GroupResult.restore(scraperId, app=celery_app)
 
         if not details_result or not details_result.ready():
-            return {"status": "Scraping is still in progress"}
+            return {"status": "Scraping is still in progress"} # Assumed no error is happened
         
         scraping = False
         # details_results = [result.get() for result in group_result.children]
         details_results = details_result.get()
         print_schema(details_results)
         names = [company.get('name') for company in details_results if company and 'twitter_url' in company]
+        
+        
+        with open('company_details.json', 'w') as file:
+            file.write(json.dumps(details_results, indent=4))
+
+        
+        
+        companies, num_clusters = grouper(details_results)
+
+        # for i in range(1, num_clusters + 1):
+        #     print(f'Cluster {i}:')
+        #     print([company['name'] for company in companies if company['cluster'] == i])
+        
+
+        clustered_companies = {}
+        for i in range(1, num_clusters + 1):
+            clustered_companies[f'Cluster {i}'] = [company['name'] for company in companies if company['cluster'] == i]
+
+        with open('clustered_companies.json', 'w') as file:
+            json.dump(clustered_companies, file, indent=4)
 
 
+        
+        print("Scraping completed")
         return JSONResponse(content={"status": "All tasks completed", "results": names}, media_type="application/json")
