@@ -3,7 +3,13 @@ import json
 from celery import Celery, chord
 from celery.utils.log import get_task_logger
 
-app = Celery('CompanyAnalyzer', broker='pyamqp://guest@localhost//', backend='redis://localhost')
+# app = Celery('CompanyAnalyzer', broker='pyamqp://guest@localhost//', backend='redis://localhost')
+
+
+app = Celery('CompanyAnalyzer', 
+             broker='pyamqp://guest:guest@rabbitmq:5672//', 
+             backend='redis://redis:6379/0')
+
 
 logger = get_task_logger(__name__)
 

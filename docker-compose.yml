@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+  worker:
+    build: .
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - rabbitmq
+  redis:
+    image: redis:alpine
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"

@@ -4,15 +4,16 @@ import json
 import numpy as np
 
 from print_schema import print_schema
+import seaborn as sns  # pip install seaborn
 
 from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import dendrogram, linkage
 from matplotlib import pyplot as plt # pip install matplotlib
 from scipy.cluster.hierarchy import fcluster
 
-# nltk.download('punkt')
-# nltk.download('stopwords')
-# nltk.download('wordnet')
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
@@ -95,7 +96,7 @@ def get_partner_closeness(companies):
 def combine_matrices(description_matrix, geo_matrix, partner_matrix):
 
     # Importance levels for each matrix
-    description_importance = 5
+    description_importance = 4
     geo_importance = 1
     partner_importance = 5
 
@@ -111,9 +112,17 @@ def hierarchical_clustering(combined_matrix):
     plt.show()
 
 def create_clusters(combined_matrix, num_clusters):
-    linked = linkage(combined_matrix, 'average')
+    linked = linkage(combined_matrix, 'complete') # 'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'
     cluster_labels = fcluster(linked, num_clusters, criterion='maxclust')
     return cluster_labels
+
+def heatmap(combined_matrix):
+    # Generate and save the heatmap
+    plt.figure(figsize=(10, 10))  # You can adjust the size of the figure
+    sns.heatmap(combined_matrix, cmap='viridis')  # 'viridis', 'plasma', 'inferno', 'magma', 'cividis' are some good colormaps
+    plt.title('Combined Matrix Heatmap')
+    plt.savefig('combined_matrix_heatmap.png')  # Save the figure
+    plt.show()  # Display the figure
 
 def grouper(companies):
     # # Path to your JSON file
@@ -128,10 +137,11 @@ def grouper(companies):
     partner_matrix = get_partner_closeness(companies)
     combined_matrix = combine_matrices(description_matrix, geo_matrix, partner_matrix)
 
-
+    
     # combined_matrix = set_diagonal_to_one(combined_matrix)
     # print(combined_matrix)
 
+    # heatmap(combined_matrix[:20, :20])
     # hierarchical_clustering(combined_matrix)
     
     num_clusters = 6 # You can decide this number based on the dendrogram
@@ -140,13 +150,18 @@ def grouper(companies):
     # Prepare the data for JSON serialization
     for i, company in enumerate(companies):
         company['cluster'] = int(cluster_labels[i])  # Convert Numpy int to Python int
-        company['matrix'] = combined_matrix[i].tolist()  # Convert Numpy array to list
+        # company['matrix'] = combined_matrix[i].tolist()  # Convert Numpy array to list
 
     # for company in companies:
     #     if company['name'] == 'Allied Irish Banks plc':
     #         print(company['matrix'])
 
+    # for i in range(1, num_clusters + 1):
+    #     print(f'Cluster {i}:')
+    #     print([company['name'] for company in companies if company['cluster'] == i])
 
+    # for i, company in enumerate(companies):
+    #     print(i, company['cluster'])
 
     return companies, num_clusters
 

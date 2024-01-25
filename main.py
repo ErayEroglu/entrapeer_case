@@ -68,18 +68,9 @@ async def scraper():
         names = [company.get('name') for company in details_results if company and 'twitter_url' in company]
         
         
-        with open('company_details.json', 'w') as file:
-            file.write(json.dumps(details_results, indent=4))
-
-        
-        
         companies, num_clusters = grouper(details_results)
 
-        # for i in range(1, num_clusters + 1):
-        #     print(f'Cluster {i}:')
-        #     print([company['name'] for company in companies if company['cluster'] == i])
-        
-
+     
         clustered_companies = {}
         for i in range(1, num_clusters + 1):
             clustered_companies[f'Cluster {i}'] = [company['name'] for company in companies if company['cluster'] == i]
@@ -87,7 +78,9 @@ async def scraper():
         with open('clustered_companies.json', 'w') as file:
             json.dump(clustered_companies, file, indent=4)
 
+        with open('company_details.json', 'w') as file:
+            file.write(json.dumps(details_results, indent=4))
 
         
         print("Scraping completed")
-        return JSONResponse(content={"status": "All tasks completed", "results": names}, media_type="application/json")
+        return JSONResponse(content={"status": "All tasks completed", "results": details_results}, media_type="application/json")
