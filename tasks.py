@@ -3,9 +3,10 @@ import json
 from celery import Celery, chord
 from celery.utils.log import get_task_logger
 
+# Development phase
 # app = Celery('CompanyAnalyzer', broker='pyamqp://guest@localhost//', backend='redis://localhost')
 
-
+# Production phase
 app = Celery('CompanyAnalyzer', 
              broker='pyamqp://guest:guest@rabbitmq:5672//', 
              backend='redis://redis:6379/0')
@@ -41,7 +42,7 @@ def fetch_company_details(company_id):
         response = requests.post('https://ranking.glassdollar.com/graphql', headers=headerDetailed, json=json_data)
         return response.json()['data']['corporate']
     except Exception as exc:
-        raise "Excessive amount of requests to the server. Please try again later."
+        raise RuntimeError("Excessive amount of requests to the server. Please try again later.")
         
 
 

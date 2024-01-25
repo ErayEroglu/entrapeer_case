@@ -18,7 +18,6 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
 from sklearn.metrics.pairwise import cosine_similarity
-
 lemmatizer = WordNetLemmatizer()
 
 def set_diagonal_to_zero(matrix):
@@ -62,7 +61,7 @@ def get_geo_closeness(companies):
     # print(geo_closeness_matrix)
     return geo_closeness_matrix  
 
-def get_partner_closeness(companies):
+def get_same_partners_closeness(companies):
     num_companies = len(companies)
     partner_closeness_matrix = np.zeros((num_companies, num_companies))
 
@@ -92,18 +91,62 @@ def get_partner_closeness(companies):
     # print(partner_closeness_matrix)
     return partner_closeness_matrix
 
+def calculate_theme_similarity(company1, company2):
+    # Themes for each company which is linked to the count of partners with that theme
+    themes1 = {theme[0]: int(theme[1]) for theme in company1['startup_themes']}
+    themes2 = {theme[0]: int(theme[1]) for theme in company2['startup_themes']}
+    
 
-def combine_matrices(description_matrix, geo_matrix, partner_matrix):
+    # Find shared themes and all themes
+    shared_themes = set(themes1).intersection(set(themes2))
+    total_themes = set(themes1).union(set(themes2))
+    
+    # Calculate similarity score based on shared themes and their counts
+    similarity_score = sum(min(themes1[theme], themes2[theme]) for theme in shared_themes)
+    # Calculate maximum possible score also gives the total number of partners
+    max_score = sum(themes1.get(theme, 0) + themes2.get(theme, 0) for theme in total_themes)  # Used get() to avoid KeyError
+
+
+    # Normalize to a value between 0 and 1
+    if max_score > 0:
+        normalized_score = similarity_score / max_score
+    else:
+        normalized_score = 0
+    
+    return normalized_score
+
+def get_theme_closeness(companies):
+    num_companies = len(companies)
+    theme_closeness_matrix = np.zeros((num_companies, num_companies))
+    count = 0
+    for i in range(num_companies):
+        # print(count)
+        # count += 1
+        for j in range(i+1, num_companies):  
+            similarity = calculate_theme_similarity(companies[i], companies[j])
+            theme_closeness_matrix[i][j] = similarity
+            theme_closeness_matrix[j][i] = similarity # since the matrix is symmetric 
+    
+    return theme_closeness_matrix
+
+def get_partner_closeness(companies):
+    same_partner_matrix = get_same_partners_closeness(companies)
+    similar_theme_partner_matrix = get_theme_closeness(companies)
+
+    return same_partner_matrix , similar_theme_partner_matrix
+
+
+def combine_matrices(description_matrix, geo_matrix, partner_matrix, theme_matrix):
 
     # Importance levels for each matrix
-    description_importance = 4
+    description_importance = 3
     geo_importance = 1
     partner_importance = 5
+    theme_importance = 4
 
-    combined_matrix = (description_importance * description_matrix + geo_importance * geo_matrix + partner_importance * partner_matrix) / (description_importance + geo_importance + partner_importance)
+    combined_matrix = (description_importance * description_matrix + geo_importance * geo_matrix + partner_importance * partner_matrix + theme_importance * theme_matrix) / (description_importance + geo_importance + partner_importance + theme_importance)
 
     return combined_matrix
-
 
 def hierarchical_clustering(combined_matrix):
     linked = linkage(combined_matrix, 'single')
@@ -125,49 +168,41 @@ def heatmap(combined_matrix):
     plt.show()  # Display the figure
 
 def grouper(companies):
-    # # Path to your JSON file
-    # file_path = 'company_details.json'
-
-    # # Reading the JSON data from the file
-    # with open(file_path, 'r') as file:
-    #     companies = json.load(file)
-
     description_matrix = set_diagonal_to_zero(get_description_closeness(companies))
     geo_matrix = get_geo_closeness(companies)
-    partner_matrix = get_partner_closeness(companies)
-    combined_matrix = combine_matrices(description_matrix, geo_matrix, partner_matrix)
+    partner_matrix, theme_matrix = get_partner_closeness(companies)
+    combined_matrix = combine_matrices(description_matrix, geo_matrix, partner_matrix, theme_matrix)
 
-    
     # combined_matrix = set_diagonal_to_one(combined_matrix)
     # print(combined_matrix)
 
     # heatmap(combined_matrix[:20, :20])
     # hierarchical_clustering(combined_matrix)
     
-    num_clusters = 6 # You can decide this number based on the dendrogram
+    num_clusters = 20 # You can decide this number based on the dendrogram
     cluster_labels = create_clusters(combined_matrix, num_clusters)
 
     # Prepare the data for JSON serialization
     for i, company in enumerate(companies):
-        company['cluster'] = int(cluster_labels[i])  # Convert Numpy int to Python int
+        company['clusterNo'] = int(cluster_labels[i])  # Convert Numpy int to Python int
         # company['matrix'] = combined_matrix[i].tolist()  # Convert Numpy array to list
 
-    # for company in companies:
-    #     if company['name'] == 'Allied Irish Banks plc':
-    #         print(company['matrix'])
-
-    # for i in range(1, num_clusters + 1):
-    #     print(f'Cluster {i}:')
-    #     print([company['name'] for company in companies if company['cluster'] == i])
+    for i in range(1, num_clusters + 1):
+        print(f'Cluster {i}:')
+        print([company['name'] for company in companies if company['clusterNo'] == i])
 
     # for i, company in enumerate(companies):
-    #     print(i, company['cluster'])
+    #     print(i, company['clusterNo'])
 
+    
     return companies, num_clusters
 
-
-    # # # Write the clustered data to a JSON file
-    # with open('clustered_companies.json', 'w') as file:
-    #     json.dump(companies["cluster"], file, indent=4)
-
-# grouper([])
+if __name__ == '__main__':
+    # Path to your JSON file
+    file_path = 'company_details.json'
+    
+    # Reading the JSON data from the file
+    with open(file_path, 'r') as file:
+        companies = json.load(file)
+    
+    grouper(companies)
