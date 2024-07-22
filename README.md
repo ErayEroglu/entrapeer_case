@@ -1,6 +1,6 @@
 # GlassDollar Crawler
 
-This project is a crawler that scrapes corporates and their startup partners data from [GlassDollar](https://ranking.glassdollar.com/). It captures key details about enterprises and their startup partners, storing the data in JSON format. The crawler uses Celery for distributed task processing to efficiently handle multiple scraping jobs in parallel. After scraping, it employs NLP techniques for company similarity analysis and provides the functionality as a service through a FastAPI server.
+This project is a crawler that scrapes corporate and their startup partners' data from [GlassDollar](https://ranking.glassdollar.com/). It captures key details about enterprises and their startup partners, storing the data in JSON format. The crawler uses Celery for distributed task processing to efficiently handle multiple scraping jobs in parallel. After scraping, it employs NLP techniques for company similarity analysis and provides the functionality as a service through a FastAPI server.
 
 
 ## Features
@@ -55,13 +55,13 @@ This will start the scraping tasks and once completed, the data will be availabl
 
 ### API Endpoints
 
-- `/` - Returns a instruction message for using the API.
+- `/` - Returns an instruction message for using the API.
 - `/scraper` - Initiates the scraping process and returns the status of the operation. This endpoint returns the companies that are scraped from the query when it is finished. Additionally, it writes the result to company_details.json.
 You can reach the file with the following command:
 ```
  cat company_details.json
 ```
-If you having trouble to reach the file, look at the "Extra commands for eliminating the problems" section at the end.
+If you are having trouble reaching the file, look at the "Extra commands for eliminating the problems" section at the end.
 
   Important note: This endpoint contains both asynchronous and synchronous operations. Deciding which corporates to scrape and fetching them from the query are done synchronously since it takes a short time. Scraping tasks are executed asynchronously using Celery since it takes time.
 
@@ -72,7 +72,7 @@ You can reach the file with the following command:
 ```
  cat clustered_companies.json
 ```
-If you having trouble to reach the file, look at the "Extra commands for eliminating the problems" section at the end.
+If you are having trouble reaching the file, look at the "Extra commands for eliminating the problems" section at the end.
 
 ## Built With
 
@@ -85,7 +85,7 @@ If you having trouble to reach the file, look at the "Extra commands for elimina
 ## From
 
 - **Mustafa Atak** - *Idea and coding*
-- **ChatGPT** - *Redundant Work Asistant for jobs like documentation*
+- **ChatGPT** - *Redundant Work Assistant for jobs like documentation*
 
 
 ## Final Note
@@ -95,8 +95,8 @@ This project is part of the Entrapeer Case Study. It is not optimized in terms o
 
 ### Extra commands for eliminating the problems
 
-#### Reaching to the files
-To reach files you need to access container shell. To do that, run the following command:
+#### Reaching the files
+To reach the files, you need to access the container shell. To do that, run the following command:
 ```
 sudo docker exec -it <container_id> /bin/bash
 ```
@@ -115,15 +115,15 @@ cat clustered_companies.json
 
 #### Solving RabbitMQ is using the port error
 
-controlling use of port:
+Controlling use of port:
 ```
  sudo lsof -i :5672
  ```
-close the service in order to use the port:
+Close the service in order to use the port:
 ```
  sudo systemctl stop <service_name> (probably rabbitmq-server)
  ```
-start the service again for development: 
+Start the service again for development:
 ```
  sudo systemctl start <service_name> (probably rabbitmq-server)
 
