@@ -65,7 +65,7 @@ If you are having trouble reaching the file, look at the "Extra commands for eli
 
   Important note: This endpoint contains both asynchronous and synchronous operations. Deciding which corporates to scrape and fetching them from the query are done synchronously since it takes a short time. Scraping tasks are executed asynchronously using Celery since it takes time.
 
-- `/grouper` - Groups the scraped companies based on their similarities and returns the results. Also written synchronously since it takes a short time (Option to turn it into an asynchronous task is available in the code). It writes the created clusters to clustered_companies.json. Also, it updates company_details.json with the cluster information. 
+- `/grouper` - Groups the scraped companies based on their similarities and returns the results. Also written synchronously since it takes a short time ( Option to turn it into an asynchronous task is available in the code). It writes the created clusters to clustered_companies.json. Also, it updates company_details.json with the cluster information. 
  
 
 You can reach the file with the following command:
